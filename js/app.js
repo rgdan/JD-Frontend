@@ -189,15 +189,29 @@
         await Api.tasks.update(targetUserId(), t.id, { status: select.value });
         await loadTasks();
       });
+      const actions = el('div', { class: 'row' },
+        el('button', { class: 'btn ghost small', onclick: () => openTaskDialog(t) }, 'Editar'),
+        el('button', { class: 'btn danger small', onclick: () => deleteTask(t) }, 'Eliminar'));
+      const nextStatus = { PENDING: 'INPROGRESS', INPROGRESS: 'DONE' }[t.status];
+      if (nextStatus) {
+        const advance = el('button', { class: 'btn secondary small', onclick: () => guard(async () => {
+          advance.disabled = true;
+          try {
+            await Api.tasks.update(targetUserId(), t.id, { status: nextStatus });
+            await loadTasks();
+          } finally {
+            advance.disabled = false;
+          }
+        }) }, 'Avanzar');
+        actions.prepend(advance);
+      }
       list.append(el('article', { class: 'card task ' + t.status },
         el('div', { class: 'row' }, el('span', { class: 'badge ' + t.status }, STATUS_LABEL[t.status] || t.status),
           el('span', { class: 'meta' }, '#' + t.id)),
         el('p', {}, t.description || ''),
         el('div', { class: 'meta' }, 'Límite: ' + (t.deadline || '-') + ' · Creada: ' + fmtDate(t.createdAt)),
         select,
-        el('div', { class: 'row' },
-          el('button', { class: 'btn ghost small', onclick: () => openTaskDialog(t) }, 'Editar'),
-          el('button', { class: 'btn danger small', onclick: () => deleteTask(t) }, 'Eliminar'))));
+        actions));
     });
   }
 
