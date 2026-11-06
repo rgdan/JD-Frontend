@@ -30,7 +30,9 @@ const Api = (() => {
     listeners.forEach((fn) => fn(entry));
     if (!res.ok) {
       const msg = (data && (data.message || data.error)) || `Error HTTP ${res.status}`;
-      throw new Error(msg);
+      const error = new Error(msg);
+      error.status = res.status;
+      throw error;
     }
     return data;
   }
@@ -40,6 +42,7 @@ const Api = (() => {
     users: {
       list: () => request('GET', '/users'),
       get: (id) => request('GET', `/users/${id}`),
+      byUsername: (username) => request('GET', `/users/byusername/${encodeURIComponent(username)}`),
       create: (u) => request('POST', '/users', u),
       update: (id, u) => request('PATCH', `/users/${id}`, u),
       remove: (id) => request('DELETE', `/users/${id}`),
